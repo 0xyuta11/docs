@@ -24,12 +24,12 @@
       "anchors": [
         {
           "anchor": "Github",
-          "href": "https://github.com/mintlify/mintlify",
+          "href": "https://github.com/SendArcade/send-unity-toolkit",
           "icon": "github"
         },
         {
           "anchor": "Website",
-          "href": "https://mintlify.com",
+          "href": "https://unitydepin.vbhv.xyz/",
           "icon": "globe"
         }
       ]
