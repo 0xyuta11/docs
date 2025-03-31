@@ -3,105 +3,98 @@ title: 'Development'
 description: 'Preview changes locally to update your docs'
 ---
 
-<Info>
-  **Prerequisite**: Please install Node.js (version 19 or higher) before proceeding. <br />
-  Please upgrade to ```docs.json``` before proceeding and delete the legacy ```mint.json``` file.
-</Info>
+## Editor Tools
 
-Follow these steps to install and run Mintlify on your operating system:
+### Web3 NPC Manager
 
-**Step 1**: Install Mintlify:
+- Located at Window > SendUnitySDK > Web3 NPC Manager
+- Manage all Web3 NPCs in your game
+- Configure contract addresses and program IDs
+- Set available actions for each NPC
 
-<CodeGroup>
+### Web3 NPC Inspector
 
-  ```bash npm
-  npm i -g mintlify
-  ```
+- Custom inspector for NPC GameObjects
+- Select registered Web3 NPCs
+- View NPC details and available actions
+- Quick access to Web3 NPC Manager
 
-```bash yarn
-yarn global add mintlify
+## Best Practices
+
+1. **Authentication**
+
+   - Always check `SendSDKManager.Instance.IsAuthenticated()` before Web3 operations
+   - Handle authentication state changes via events
+
+2. **Error Handling**
+
+   - Subscribe to error events from managers
+   - Implement proper error recovery
+   - Log errors for debugging
+
+3. **State Management**
+
+   - Keep local state in sync with on-chain state
+   - Handle transaction confirmations
+   - Implement retry logic for failed transactions
+
+4. **Performance**
+   - Cache RPC responses when possible
+   - Batch transactions when appropriate
+   - Use appropriate RPC endpoints (devnet/mainnet)
+
+## Contract Integration
+
+The SDK expects specific contract interfaces for each feature:
+
+### NPC Interaction Contract
+
+```rust
+// Example Anchor contract interface
+#[program]
+pub mod npc_interaction {
+    use super::*;
+
+    pub fn update_npc_state(ctx: Context<UpdateNPCState>, npc_id: String, new_state: Vec<u8>) -> Result<()> {
+        // Implementation
+    }
+
+    pub fn interact_with_npc(ctx: Context<InteractWithNPC>, npc_id: String, action: String, params: Vec<u8>) -> Result<()> {
+        // Implementation
+    }
+}
 ```
 
-</CodeGroup>
+### NFT Contract
 
-**Step 2**: Navigate to the docs directory (where the `docs.json` file is located) and execute the following command:
+```rust
+#[program]
+pub mod game_nft {
+    use super::*;
 
-```bash
-mintlify dev
+    pub fn mint_game_item(ctx: Context<MintGameItem>, metadata_uri: String) -> Result<()> {
+        // Implementation
+    }
+
+    pub fn transfer_item(ctx: Context<TransferItem>, to: Pubkey) -> Result<()> {
+        // Implementation
+    }
+}
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
+### Currency Contract
 
-### Custom Ports
+```rust
+#[program]
+pub mod game_currency {
+    use super::*;
 
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. To run Mintlify on port 3333, for instance, use this command:
+    pub fn mint_tokens(ctx: Context<MintTokens>, amount: u64) -> Result<()> {
+        // Implementation
+    }
 
-```bash
-mintlify dev --port 3333
+    pub fn transfer_tokens(ctx: Context<TransferTokens>, to: Pubkey, amount: u64) -> Result<()> {
+        // Implementation
+    }
+}
 ```
-
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
-
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
-
-## Mintlify Versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local website doesn't align with the production version, please update the CLI:
-
-<CodeGroup>
-
-```bash npm
-npm i -g mintlify@latest
-```
-
-```bash yarn
-yarn global upgrade mintlify
-```
-
-</CodeGroup>
-
-## Validating Links
-
-The CLI can assist with validating reference links made in your documentation. To identify any broken links, use the following command:
-
-```bash
-mintlify broken-links
-```
-
-## Deployment
-
-<Tip>
-  Unlimited editors available under the [Pro
-  Plan](https://mintlify.com/pricing) and above.
-</Tip>
-
-If the deployment is successful, you should see the following:
-
-<Frame>
-  <img src="/images/checks-passed.png" style={{ borderRadius: '0.5rem' }} />
-</Frame>
-
-## Code Formatting
-
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
-
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
-
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of mintlify: `npm remove -g mintlify`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall mintlify: `npm install -g mintlify`
-  </Accordion>
-
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the \~/.mintlify folder. Afterwards, run `mintlify dev` again.
-  </Accordion>
-</AccordionGroup>
-
-Curious about what changed in the CLI version? [Check out the CLI changelog.](https://www.npmjs.com/package/mintlify?activeTab=versions)
