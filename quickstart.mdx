@@ -1,109 +1,299 @@
 ---
 title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+description: 'Integrate Send Web3 features into your Unity game in minutes'
 ---
+
+# Send Unity SDK Quickstart
+
+The Send Unity SDK enables you to easily add blockchain functionality to your Unity games, including Web3 NPCs, NFTs, and cryptocurrency transactions.
+
+## Prerequisites
+
+- Unity 2020.3 LTS or newer
+- Basic understanding of C# and Unity development
+- A Send account and access to program IDs (contact support if needed)
 
 ## Installation
 
-1. Import the SendUnitySDK package into your Unity project
-2. Add the `SendSDKManager` component to a GameObject in your scene
-3. Configure your RPC endpoint and program IDs in the inspector
+1. Import the SendUnitySDK package into your Unity project via the Package Manager:
+   - Window > Package Manager > + > Add package from git URL
+   - Enter: `https://github.com/send-io/unity-sdk.git`
 
-## Quick Start
+2. Once imported, create a new empty GameObject in your startup scene and add the `SendSDKManager` component
+
+3. Configure your SDK settings in the inspector:
+   - Enter your RPC endpoint URL (e.g., `https://api.devnet.send.io`)
+   - Add your program IDs for each component you plan to use
+   - Configure authentication settings based on your game requirements
+
+<img src="/images/sdk-manager-setup.png" alt="Send SDK Manager Setup" width="600px" />
+
+## Authentication
+
+Before using any Web3 features, players must authenticate:
+
+```csharp
+// Place this in your login UI or game startup code
+public async void LoginPlayer()
+{
+    bool success = await SendSDKManager.Instance.Authenticate();
+    if (success)
+    {
+        Debug.Log("Player authenticated successfully!");
+        // Enable Web3 features in your game
+    }
+    else
+    {
+        Debug.LogError("Authentication failed!");
+        // Show login error to player
+    }
+}
+```
+
+## Web3 NPCs
+
+Send's Web3 NPCs allow players to interact with blockchain contracts through in-game characters.
+
+<img src="/images/npc-manager.png" alt="NPC Manager" width="600px" />
 
 ### Setting Up NPCs
 
-<img src="/images/npc-manager.png" alt="NPC Manager" />
+1. Create a new GameObject in your scene hierarchy and add the `NPCManager` component
 
-1. Create a new GameObject and add the `NPCManager` component
-2. Open the Web3 NPC Manager (Window > SendUnitySDK > Web3 NPC Manager)
-3. Add a new NPC:
+2. Open the Web3 NPC Manager from Unity's menu:
+   - Window > SendUnitySDK > Web3 NPC Manager
 
-   ```csharp
-   var npcState = new NPCState
-   {
-       npcId = "quest_giver_1",
-       contractAddress = "YOUR_CONTRACT_ADDRESS",
-       programId = "YOUR_PROGRAM_ID",
-       interactionType = NPCInteractionType.QuestGiver,
-       isInteractable = true,
-       availableActions = new[] { "startQuest", "completeQuest" }
-   };
-   npcManager.RegisterNPC(npcState);
-   ```
+3. Register your NPCs using code:
 
-4. Add the `Web3NPC` component to your NPC GameObject and select the registered NPC
+```csharp
+// Usually in a manager class that handles game initialization
+public void SetupNPCs()
+{
+    // Create NPC state data
+    var questGiver = new NPCState
+    {
+        npcId = "quest_giver_1",               // Unique identifier for this NPC
+        contractAddress = "YOUR_CONTRACT_ADDRESS", // The contract this NPC interacts with
+        programId = "YOUR_PROGRAM_ID",         // Program ID from Send dashboard
+        interactionType = NPCInteractionType.QuestGiver,
+        isInteractable = true,
+        availableActions = new[] { "startQuest", "completeQuest" }
+    };
+    
+    // Register with the NPC manager
+    npcManager.RegisterNPC(questGiver);
+    
+    // You can add multiple NPCs with different functions
+    var shopkeeper = new NPCState
+    {
+        npcId = "shopkeeper_1",
+        contractAddress = "SHOP_CONTRACT_ADDRESS",
+        programId = "SHOP_PROGRAM_ID",
+        interactionType = NPCInteractionType.Merchant,
+        isInteractable = true,
+        availableActions = new[] { "buyItem", "sellItem", "viewInventory" }
+    };
+    npcManager.RegisterNPC(shopkeeper);
+}
+```
+
+4. For each NPC in your game world:
+   - Add the `Web3NPC` component to your NPC GameObject 
+   - Select the registered NPC ID from the dropdown
 
 ### Handling NPC Interactions
 
+When players interact with NPCs, use the NPCManager to execute blockchain transactions:
+
 ```csharp
-// In your game script
-public class QuestManager : MonoBehaviour
+// Typically in a class that handles player-NPC interactions
+public class QuestSystem : MonoBehaviour
 {
     [SerializeField] private NPCManager npcManager;
 
-    public async void StartQuest()
+    // Called when player clicks "Accept Quest" button
+    public async void StartQuest(string questId)
     {
+        // Always verify authentication first
         if (!SendSDKManager.Instance.IsAuthenticated())
         {
-            Debug.LogError("Please login first!");
+            Debug.LogError("Player not authenticated!");
+            // Show login prompt
             return;
         }
 
-        bool success = await npcManager.InteractWithNPC(
-            "quest_giver_1",
-            "startQuest",
-            new object[] { "QuestID123", "PlayerID456" }
-        );
+        try {
+            // Execute the blockchain interaction
+            bool success = await npcManager.InteractWithNPC(
+                "quest_giver_1",       // NPC ID
+                "startQuest",          // Action to perform
+                new object[] { questId, SendSDKManager.Instance.GetPlayerID() }  // Parameters
+            );
 
-        if (success)
-        {
-            Debug.Log("Quest started successfully!");
+            if (success)
+            {
+                Debug.Log("Quest started successfully!");
+                // Update UI, quest log, etc.
+            }
+        }
+        catch (Exception e) {
+            Debug.LogError($"Quest transaction failed: {e.Message}");
+            // Show error to player
         }
     }
+    
+    // Additional quest-related methods...
 }
 ```
 
-### Managing NFTs
+## NFT Management
 
-<img src="/images/asset-manager.png" alt="Asset Manager" />
+Use the GameNFTHandler to mint, transfer and manage in-game NFTs.
+
+<img src="/images/asset-manager.png" alt="Asset Manager" width="600px" />
+
+### Setting Up NFT Management
+
+1. Create a GameObject with the `GameNFTHandler` component
+2. Configure the component in the inspector with your NFT collection details
+
+### Working with NFTs
 
 ```csharp
-public class ItemManager : MonoBehaviour
+public class ItemSystem : MonoBehaviour
 {
     [SerializeField] private GameNFTHandler nftHandler;
 
-    public async void MintGameItem(string metadataUri)
+    // Mint a new item as an NFT
+    public async void CreateItemAsNFT(string itemName, Dictionary<string, object> attributes)
     {
         if (!SendSDKManager.Instance.IsAuthenticated())
         {
-            Debug.LogError("Please login first!");
+            Debug.LogError("Player not authenticated!");
             return;
         }
 
-        await nftHandler.MintNFT(metadataUri);
+        // Create metadata for the NFT
+        var metadata = new NFTMetadata
+        {
+            name = itemName,
+            description = $"A {itemName} owned by {SendSDKManager.Instance.GetPlayerName()}",
+            image = "https://your-game-cdn.com/items/sword.png",
+            attributes = attributes
+        };
+        
+        string metadataUri = await nftHandler.UploadMetadata(metadata);
+        
+        try {
+            string mintTxId = await nftHandler.MintNFT(metadataUri);
+            Debug.Log($"Item minted successfully! Transaction ID: {mintTxId}");
+            
+            // You can store the mintTxId to reference this NFT later
+        }
+        catch (Exception e) {
+            Debug.LogError($"Failed to mint NFT: {e.Message}");
+        }
+    }
+    
+    // Get all NFTs owned by the player
+    public async void DisplayPlayerInventory()
+    {
+        var playerNFTs = await nftHandler.GetPlayerNFTs();
+        
+        foreach (var nft in playerNFTs)
+        {
+            Debug.Log($"Player owns: {nft.metadata.name}");
+            // Update inventory UI
+        }
     }
 }
 ```
 
-### Handling In-Game Currency
+## In-Game Currency
 
-<img src="/images/currency-manager.png" alt="Currency Manager" />
+Manage token-based in-game currency with the GameCurrencyHandler.
+
+<img src="/images/currency-manager.png" alt="Currency Manager" width="600px" />
+
+### Setting Up Currency
+
+1. Create a GameObject with the `GameCurrencyHandler` component
+2. Configure your token details in the inspector
+
+### Managing Currency
 
 ```csharp
-public class CurrencyManager : MonoBehaviour
+public class EconomyManager : MonoBehaviour
 {
     [SerializeField] private GameCurrencyHandler currencyHandler;
 
-    public async void RewardPlayer(ulong amount)
+    // Award currency to the player
+    public async void RewardPlayer(ulong amount, string reason)
     {
         if (!SendSDKManager.Instance.IsAuthenticated())
         {
-            Debug.LogError("Please login first!");
+            Debug.LogError("Player not authenticated!");
             return;
         }
 
-        await currencyHandler.MintTokens(amount);
+        try {
+            string txId = await currencyHandler.MintTokens(amount);
+            Debug.Log($"Rewarded player with {amount} tokens! Tx: {txId}");
+            
+            // Update UI to show new balance
+            UpdateCurrencyDisplay();
+        }
+        catch (Exception e) {
+            Debug.LogError($"Failed to reward player: {e.Message}");
+        }
+    }
+    
+    // Get and display current balance
+    public async void UpdateCurrencyDisplay()
+    {
+        ulong balance = await currencyHandler.GetPlayerBalance();
+        Debug.Log($"Player has {balance} tokens");
+        // Update UI elements with the balance
+    }
+    
+    // Process in-game purchase
+    public async void PurchaseItem(string itemId, ulong cost)
+    {
+        ulong balance = await currencyHandler.GetPlayerBalance();
+        
+        if (balance < cost)
+        {
+            Debug.Log("Insufficient funds!");
+            // Show insufficient funds message
+            return;
+        }
+        
+        // First transfer the currency
+        await currencyHandler.TransferTokens(SendSDKManager.Instance.GetGameWalletAddress(), cost);
+        
+        // Then grant the item to the player
+        // Your item granting code here
+        
+        Debug.Log($"Item {itemId} purchased successfully!");
     }
 }
 ```
+
+## Advanced Features
+
+The SDK offers additional features like:
+- Transaction history tracking
+- Gasless transactions (meta-transactions)
+- Multi-chain support
+- Custom contract integration
+
+See our [full documentation](https://docs.send.io) for more details.
+
+## Troubleshooting
+
+Common issues:
+- Authentication failures: Check your RPC endpoint and network status
+- Transaction errors: Verify program IDs and contract addresses
+- Gas/fee issues: Ensure your game wallet has sufficient balance
+
+For support, join our [Discord community](https://discord.gg/send) or email support@send.io
