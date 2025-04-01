@@ -10,19 +10,18 @@ The Send Unity SDK enables you to easily add blockchain functionality to your Un
 ## Prerequisites
 
 - Unity 2020.3 LTS or newer
-- Basic understanding of C# and Unity development
-- A Send account and access to program IDs (contact support if needed)
+- Basic understanding of C#, Unity development and Solana web3
 
 ## Installation
 
 1. Import the SendUnitySDK package into your Unity project via the Package Manager:
    - Window > Package Manager > + > Add package from git URL
-   - Enter: `https://github.com/send-io/unity-sdk.git`
+   - Enter: `https://github.com/SendArcade/send-unity-toolkit.git`
 
 2. Once imported, create a new empty GameObject in your startup scene and add the `SendSDKManager` component
 
 3. Configure your SDK settings in the inspector:
-   - Enter your RPC endpoint URL (e.g., `https://api.devnet.send.io`)
+   - Enter your RPC endpoint URL (e.g., `https://api.devnet.solana.com`)
    - Add your program IDs for each component you plan to use
    - Configure authentication settings based on your game requirements
 
@@ -278,22 +277,3 @@ public class EconomyManager : MonoBehaviour
     }
 }
 ```
-
-## Advanced Features
-
-The SDK offers additional features like:
-- Transaction history tracking
-- Gasless transactions (meta-transactions)
-- Multi-chain support
-- Custom contract integration
-
-See our [full documentation](https://docs.send.io) for more details.
-
-## Troubleshooting
-
-Common issues:
-- Authentication failures: Check your RPC endpoint and network status
-- Transaction errors: Verify program IDs and contract addresses
-- Gas/fee issues: Ensure your game wallet has sufficient balance
-
-For support, join our [Discord community](https://discord.gg/send) or email support@send.io
