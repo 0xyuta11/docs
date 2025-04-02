@@ -16,6 +16,10 @@
           {
             "group": "Get Started",
             "pages": ["introduction", "quickstart", "development"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/contracts"]
           }
         ]
       }
