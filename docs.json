@@ -19,7 +19,7 @@
           },
           {
             "group": "Guides",
-            "pages": ["guides/contracts"]
+            "pages": ["guides/contracts", "guides/NPCSetup"]
           }
         ]
       }

@@ -1,0 +1,178 @@
+---
+title: 'NPC Setup'
+description: 'NPC Setup for Unity Game'
+---
+
+## 🧙‍♂️ NPC Interaction & Dialogue System (Unity)
+
+This guide helps you set up an interactable NPC with dialogue in a Unity game using **C# scripts** and **Unity UI**.
+
+---
+
+### 📦 Files Required
+
+- `NPCInteraction.cs`
+- `DialogueSystem.cs`
+
+---
+
+## 🧰 Setup Guide
+
+### 1. Create the Dialogue UI
+
+1. **Create a Canvas**:  
+   - `UI → Canvas`
+   - Set `Render Mode → Screen Space - Overlay`
+
+2. **Create a Dialogue Panel**:  
+   - `UI → Panel` → Name it `DialoguePanel`  
+   - Set its visibility to **inactive** by default.
+
+3. **Create a Text Component** inside the `DialoguePanel`:
+   - `UI → Text` or `TextMeshPro - Text` → Name it `DialogueText`
+   - Resize and style the text box as needed.
+
+---
+
+### 2. Create the Dialogue System
+
+**Script**: `DialogueSystem.cs`  
+Attach it to an empty GameObject (e.g. `DialogueManager`).
+
+```csharp
+using UnityEngine;
+using UnityEngine.UI;
+
+public class DialogueSystem : MonoBehaviour
+{
+    public GameObject dialoguePanel;
+    public Text dialogueText;
+
+    private string[] dialogueLines;
+    private int currentLine;
+
+    public static DialogueSystem instance;
+
+    void Awake()
+    {
+        instance = this;
+        dialoguePanel.SetActive(false);
+    }
+
+    public void StartDialogue(string[] lines)
+    {
+        dialogueLines = lines;
+        currentLine = 0;
+        dialoguePanel.SetActive(true);
+        ShowLine();
+    }
+
+    void Update()
+    {
+        if (dialoguePanel.activeInHierarchy && Input.GetKeyDown(KeyCode.E))
+        {
+            currentLine++;
+            if (currentLine < dialogueLines.Length)
+                ShowLine();
+            else
+                EndDialogue();
+        }
+    }
+
+    void ShowLine()
+    {
+        dialogueText.text = dialogueLines[currentLine];
+    }
+
+    void EndDialogue()
+    {
+        dialoguePanel.SetActive(false);
+    }
+}
+```
+
+> 📝 Make sure to assign both `DialoguePanel` and `DialogueText` in the Inspector.
+
+---
+
+### 3. Create the NPC Interaction Script
+
+**Script**: `NPCInteraction.cs`  
+Attach this to any NPC character GameObject.
+
+```csharp
+using UnityEngine;
+
+public class NPCInteraction : MonoBehaviour
+{
+    public float interactionDistance = 3f;
+    public KeyCode interactKey = KeyCode.E;
+    public GameObject interactionUI;
+
+    private Transform player;
+
+    void Start()
+    {
+        player = GameObject.FindWithTag("Player").transform;
+        if (interactionUI != null)
+            interactionUI.SetActive(false);
+    }
+
+    void Update()
+    {
+        float distance = Vector3.Distance(player.position, transform.position);
+
+        if (distance <= interactionDistance)
+        {
+            if (interactionUI != null)
+                interactionUI.SetActive(true);
+
+            if (Input.GetKeyDown(interactKey))
+            {
+                Interact();
+            }
+        }
+        else
+        {
+            if (interactionUI != null)
+                interactionUI.SetActive(false);
+        }
+    }
+
+    void Interact()
+    {
+        string[] lines = new string[]
+        {
+            "Hello there!",
+            "This world has secrets hidden everywhere.",
+            "Stay safe, traveler."
+        };
+
+        DialogueSystem.instance.StartDialogue(lines);
+    }
+}
+```
+
+---
+
+### ✅ Final Checklist
+
+- Tag your player GameObject as `Player`
+- Drag & drop:
+  - `DialoguePanel` → `DialogueSystem.dialoguePanel`
+  - `DialogueText` → `DialogueSystem.dialogueText`
+- Optional: Add an interaction UI (e.g., “Press E to talk”) and hook it to `NPCInteraction.interactionUI`
+
+---
+
+### 🧪 Example Result
+
+1. Walk near NPC
+2. "Press E" prompt appears
+3. Press `E`
+4. Dialogue appears on-screen with text updates on each `E` press
+5. Closes when all lines are shown
+
+---
+
+Let me know if you want this in Markdown or JSON format for direct Mintlify import!
